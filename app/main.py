@@ -6,6 +6,7 @@ from app.routers.booking import router as booking_router
 from fastapi.staticfiles import StaticFiles
 import os
 
+
 app = FastAPI(
     title="Harvester Connect API"
 )

@@ -35,7 +35,7 @@ def register_user(
     new_user = User(
         name=user.name,
         phone=user.phone,
-        password=hash_password(user.password),
+        password="",
         role=user.role
     )
 
@@ -57,7 +57,7 @@ def get_users(db: Session = Depends(get_db)):
 @router.post("/login")
 def login(
     phone: str,
-    password: str,
+    # password: str,
     db: Session = Depends(get_db)
 ):
 
@@ -71,22 +71,22 @@ def login(
             detail="User not found"
         )
 
-    if not verify_password(password, user.password):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid password"
-        )
+    # if not verify_password(password, user.password):
+    #     raise HTTPException(
+    #         status_code=401,
+    #         detail="Invalid password"
+    #     )
 
-    token = create_access_token(
-    {
-        "user_id": user.id,
-        "role": user.role
-    }
-)
+    # token = create_access_token(
+    # {
+    #     "user_id": user.id,
+    #     "role": user.role
+    # }
+# )
 
     return {
-        "access_token": token,
-        "token_type": "bearer",
+        # "access_token": token,
+        # "token_type": "bearer",
         "user_id": user.id,
         "role": user.role
     }

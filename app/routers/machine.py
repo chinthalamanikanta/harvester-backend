@@ -31,7 +31,10 @@ def add_machine(
         machine_type=machine.machine_type,
         price_per_acre=machine.price_per_acre,
         district=machine.district,
-        state=machine.state
+        state=machine.state,
+        latitude=machine.latitude,
+        longitude=machine.longitude
+        
     )
 
     db.add(new_machine)
@@ -89,6 +92,21 @@ def get_owner_machines(
 
     machines = db.query(Machine).filter(
         Machine.owner_id == owner_id
+    ).all()
+
+    return machines
+
+@router.get("/search")
+def search_machines(
+    state: str,
+    district: str,
+    db: Session = Depends(get_db)
+):
+
+    machines = db.query(Machine).filter(
+        Machine.state == state,
+        Machine.district == district,
+        Machine.availability == 1
     ).all()
 
     return machines
