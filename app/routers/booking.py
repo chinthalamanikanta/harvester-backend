@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.models.machine import Machine
 from app.database import SessionLocal
@@ -7,6 +7,16 @@ from app.schemas.booking_schema import BookingCreate
 from app.models.user import User
 from app.models.machine import Machine
 from sqlalchemy import Column, Date
+
+from app.models.machine import Machine
+from app.models.user import User
+from app.services.notification_service import send_notification
+from app.models.notification import Notification
+from app.services.notification_service import (
+    send_notification,
+    create_notification,
+)
+
 requested_date = Column(Date)
 router = APIRouter(
     prefix="/api/bookings",
@@ -38,6 +48,48 @@ def create_booking(
     db.commit()
     db.refresh(new_booking)
 
+    machine = db.query(Machine).filter(
+    Machine.id == booking.machine_id
+    ).first()
+
+    print("===================================")
+    print("BOOKING MACHINE ID:", booking.machine_id)
+    print("MACHINE:", machine)
+
+    if machine:
+        print("OWNER ID:", machine.owner_id)
+
+        owner = db.query(User).filter(
+            User.id == machine.owner_id
+        ).first()
+
+        print("OWNER:", owner)
+
+        if owner:
+            print("OWNER TOKEN:", owner.fcm_token)
+
+        if owner and owner.fcm_token:
+
+            print("Saving notification...")
+
+            create_notification(
+                db,
+                owner.id,
+                "New Booking Request",
+                f"Farmer booked {machine.machine_name}"
+            )
+
+            print("Notification Saved")
+
+            send_notification(
+                owner.fcm_token,
+                "New Booking Request",
+                f"Farmer booked {machine.machine_name}"
+            )
+
+            print("Notification Sent")
+
+            print("===================================")
     return {
         "message": "Booking created successfully",
         "booking_id": new_booking.id
@@ -69,9 +121,29 @@ def accept_booking(
 
     db.commit()
 
+    # Notify Farmer
+    farmer = db.query(User).filter(
+        User.id == booking.farmer_id
+    ).first()
+
+    if farmer and farmer.fcm_token:
+        create_notification(
+            db,
+            farmer.id,
+            "Booking Approved",
+            "Your booking has been approved"
+        )
+
+        send_notification(
+            farmer.fcm_token,
+            "Booking Accepted",
+            "Your machine booking has been accepted."
+        )
+
     return {
         "message": "Booking accepted"
     }
+
 
 @router.put("/{booking_id}/reject")
 def reject_booking(
@@ -91,6 +163,25 @@ def reject_booking(
     booking.status = "REJECTED"
 
     db.commit()
+
+    # Notify Farmer
+    farmer = db.query(User).filter(
+        User.id == booking.farmer_id
+    ).first()
+
+    if farmer and farmer.fcm_token:
+        create_notification(
+            db,
+            farmer.id,
+            "Booking Rejected",
+            "Your booking has been rejected"
+        )
+
+        send_notification(
+            farmer.fcm_token,
+            "Booking Rejected",
+            "Your machine booking has been rejected."
+        )
 
     return {
         "message": "Booking rejected"
@@ -234,3 +325,20 @@ def owner_dashboard_stats(
         "accepted_jobs": accepted,
         "earnings": earnings
     }
+
+
+@router.get("/{user_id}")
+def get_notifications(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+
+    notifications = db.query(
+        Notification
+    ).filter(
+        Notification.user_id == user_id
+    ).order_by(
+        Notification.created_at.desc()
+    ).all()
+
+    return notifications

@@ -169,3 +169,28 @@ def upload_profile(
         "message": "Profile image uploaded",
         "profile_image": file_path
     }
+
+@router.put("/save-token/{user_id}")
+def save_token(
+    user_id: int,
+    token: str,
+    db: Session = Depends(get_db)
+):
+
+    user = db.query(User).filter(
+        User.id == user_id
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    user.fcm_token = token
+
+    db.commit()
+
+    return {
+        "message": "Token Saved"
+    }

@@ -30,3 +30,8 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now()
     )
+
+    fcm_token = Column(
+    String(500),
+    nullable=True
+)

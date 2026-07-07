@@ -5,7 +5,7 @@ from app.routers.machine import router as machine_router
 from app.routers.booking import router as booking_router
 from fastapi.staticfiles import StaticFiles
 import os
-
+from app.firebase_config import *
 
 app = FastAPI(
     title="Harvester Connect API"
