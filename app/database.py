@@ -4,14 +4,19 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 DATABASE_URL = (
     "mysql+pymysql://maniadmin:admin%40123@"
     "mani-server-db.mysql.database.azure.com:3306/harvester_db"
-    "?ssl_mode=REQUIRED"
 )
 
 # DATABASE_URL = (
 #     "mysql+pymysql://root:Mani%40123@localhost:3306/harvester_db"
 # )
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={
+        "ssl": {}
+    }
+)
 
 SessionLocal = sessionmaker(
     autocommit=False,
