@@ -14,7 +14,9 @@ engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     connect_args={
-        "ssl": {}
+        "ssl": {
+             "ca": "certs/DigiCertGlobalRootG2.crt.pem"
+        }
     }
 )
 
